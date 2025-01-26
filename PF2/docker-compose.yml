@@ -1,0 +1,35 @@
+services:
+  xmaswishes_db:
+    image: postgres:15-alpine
+    container_name: xmaswishes_db
+    environment:
+      POSTGRES_USER: xmasuser
+      POSTGRES_PASSWORD: xmaspassword
+      POSTGRES_DB: xmasdb
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - xmas_network
+
+  xmaswishes_app:
+    build: .
+    container_name: xmaswishes_app
+    depends_on:
+      - xmaswishes_db
+    environment:
+      DATABASE_HOST: xmaswishes_db
+      DATABASE_USER: xmasuser
+      DATABASE_PASSWORD: xmaspassword
+      DATABASE_NAME: xmasdb
+      DATABASE_PORT: 5432
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    networks:
+      - xmas_network
+
+networks:
+  xmas_network:
+    driver: bridge

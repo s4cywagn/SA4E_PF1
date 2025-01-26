@@ -1,0 +1,8 @@
+Set up postgresql /check
+docker-compose build
+docker-compose up -d
+python generate_letters.py /check
+mvn clean package
+java -jar target/my-camel-spring-boot-1.0.0-SNAPSHOT.jar
+python load_test.py
+Bericht
