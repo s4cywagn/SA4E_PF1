@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.orchestrator
+    container_name: orchestrator
+    depends_on:
+      - kafka
+    volumes:
+      # tracks.json ins Containerverzeichnis /app schieben,
+      # damit der Orchestrator es lesen kann.
+      - "./tracks.json:/app/tracks.json"
+    # Falls du zusätzliche Konfiguration benötigst, z.B. ENV Variablen, hier angeben
+    environment:
+      # Wir gehen davon aus, dass Kafka in diesem Docker-Netzwerk "kafka:9092" heißt.
+      # (Siehe "KAFKA_ADVERTISED_LISTENERS" oben für Host-Einstellungen.)
+      # Falls du vom Orchestrator-Container aus local=host:9092 zugreifen willst, kannst du es hier
+      # oder in CMD anpassen.
+      - KAFKA_BOOTSTRAP=kafka:9092
+    command: >
+      python orchestrator.py 
+      tracks.json 
+      kafka:9092

@@ -1,0 +1,16 @@
+# Wir verwenden ein schlankes Python-Image
+FROM python:3.9-slim
+
+# Arbeitsverzeichnis anlegen
+WORKDIR /app
+
+# Zuerst Requirements kopieren und installieren (schlankere Builds)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Nun unsere Python-Skripte ins Image
+COPY orchestrator.py .
+COPY segment.py .
+
+# Standard-Command (kann in docker-compose überschrieben werden)
+CMD ["python", "orchestrator.py", "tracks.json", "kafka:9092"]
